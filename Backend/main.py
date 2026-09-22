@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
 from configs.firebase import initialize_firebase
@@ -8,10 +9,24 @@ from routes.user_routes.user_registration import (
     router as user_registration_router
 )
 
+
 app = FastAPI(
     title="AegisLend AI",
     version="1.0.0"
 )
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.on_event("startup")
 def startup():
@@ -36,9 +51,11 @@ def startup():
         print(f"MySQL Connection Failed: {e}")
 
 
+
 app.include_router(
     user_registration_router
 )
+
 
 @app.get("/")
 def root():

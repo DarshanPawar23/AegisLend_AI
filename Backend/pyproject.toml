@@ -9,6 +9,7 @@ dependencies = [
     "email-validator>=2.3.0",
     "fastapi[standard]>=0.141.1",
     "firebase-admin>=7.5.0",
+    "httpx>=0.28.1",
     "passlib[argon2]>=1.7.4",
     "pydantic-settings>=2.15.0",
     "pymysql>=1.2.0",

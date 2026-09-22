@@ -103,8 +103,8 @@ class BankCustomer(Base):
         "LoanPayment",
         back_populates="customer"
     )
-    registration = relationship(
-    "CustomerRegistration",
+    app_registration = relationship(
+    "UserAppRegistration",
     back_populates="customer",
     uselist=False
     )

@@ -29,12 +29,23 @@ class UserRegistrationController:
         )
 
     def verify_phone(
-        self,
-        registration_id: int,
-        firebase_id_token: str
+    self,
+    registration_id: int,
+    otp: str
     ):
 
         return self.service.verify_phone(
+        registration_id=registration_id,
+        otp=otp
+        )
+
+    def setup_mpin(
+    self,
+    registration_id: int,
+    mpin: str
+    ):
+
+        return self.service.setup_mpin(
             registration_id=registration_id,
-            firebase_id_token=firebase_id_token
+            mpin=mpin
         )

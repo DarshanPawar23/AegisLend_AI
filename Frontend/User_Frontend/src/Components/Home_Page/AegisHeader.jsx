@@ -1,13 +1,19 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function AegisHeader() {
+  const navigate = useNavigate();
+
   return (
     <header className="w-full bg-white border-b border-slate-200/90 sticky top-0 z-50 shadow-sm">
       <div className="w-full px-6 lg:px-12 py-3 flex items-center justify-between gap-4">
         
         {/* Left Section: Shield Logo + Title + Tagline */}
         <div className="flex items-center gap-5 sm:gap-7">
-          <a href="#" className="flex items-center gap-3.5 group select-none">
+          <div 
+            onClick={() => navigate('/')} 
+            className="flex items-center gap-3.5 group select-none cursor-pointer"
+          >
             {/* Shield Icon Container with AI Neural Node Styling */}
             <div className="relative w-11 h-12 rounded-xl bg-gradient-to-b from-[#0e2a47] to-[#08182b] flex items-center justify-center shadow-md shadow-sky-950/20 group-hover:scale-105 transition-transform duration-300 ring-1 ring-sky-500/30">
               <svg
@@ -33,7 +39,7 @@ export default function AegisHeader() {
               <span>AegisLend</span>
               <span className="ml-1.5 text-teal-600 font-black tracking-normal">AI</span>
             </div>
-          </a>
+          </div>
 
           {/* Divider */}
           <div className="hidden md:block h-7 w-[1.5px] bg-slate-200" />
@@ -61,6 +67,7 @@ export default function AegisHeader() {
           <div className="flex flex-col items-center">
             <button
               type="button"
+              onClick={() => navigate('/login')}
               className="group relative flex items-center justify-center gap-2.5 px-7 py-2 rounded-lg border-2 border-teal-600 bg-white hover:bg-teal-600 text-teal-700 hover:text-white font-bold text-xs uppercase tracking-wider shadow-sm transition-all duration-200 active:scale-95 cursor-pointer"
             >
               <svg

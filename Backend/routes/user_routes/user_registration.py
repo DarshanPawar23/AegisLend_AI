@@ -12,7 +12,11 @@ from schemas.user_schema.user_registration import (
     AccountVerificationRequest,
     AccountVerificationResponse,
     PhoneVerificationRequest,
-    PhoneVerificationResponse
+    PhoneVerificationResponse,
+    MpinSetupRequest,
+    MpinSetupResponse,
+    ResendOtpRequest,
+    ResendOtpResponse
 )
 
 
@@ -55,5 +59,38 @@ def verify_phone(
 
     return controller.verify_phone(
         registration_id=request.registration_id,
-        firebase_id_token=request.firebase_id_token
+        otp=request.otp
+    )
+
+
+@router.post(
+    "/resend-otp",
+    response_model=ResendOtpResponse
+)
+def resend_otp(
+    request: ResendOtpRequest,
+    db: Session = Depends(get_db)
+):
+
+    controller = UserRegistrationController(db)
+
+    return controller.resend_otp(
+        registration_id=request.registration_id
+    )
+
+
+@router.post(
+    "/setup-mpin",
+    response_model=MpinSetupResponse
+)
+def setup_mpin(
+    request: MpinSetupRequest,
+    db: Session = Depends(get_db)
+):
+
+    controller = UserRegistrationController(db)
+
+    return controller.setup_mpin(
+        registration_id=request.registration_id,
+        mpin=request.mpin
     )

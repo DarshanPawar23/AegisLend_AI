@@ -8,12 +8,14 @@ from sqlalchemy import (
     ForeignKey,
     Enum
 )
+
 from sqlalchemy.orm import relationship
 
 from storage.mysql.base import Base
 
 
 class RegistrationVerification(Base):
+
     __tablename__ = "registration_verifications"
 
     verification_id = Column(
@@ -35,7 +37,7 @@ class RegistrationVerification(Base):
         nullable=False
     )
 
-    verification_token_hash = Column(
+    otp_hash = Column(
         String(255),
         nullable=False
     )
@@ -52,6 +54,7 @@ class RegistrationVerification(Base):
 
     attempt_count = Column(
         Integer,
+        nullable=False,
         default=0
     )
 
@@ -68,11 +71,13 @@ class RegistrationVerification(Base):
     )
 
     created_at = Column(
-        TIMESTAMP
+        TIMESTAMP,
+        nullable=True
     )
 
     updated_at = Column(
-        TIMESTAMP
+        TIMESTAMP,
+        nullable=True
     )
 
     registration = relationship(

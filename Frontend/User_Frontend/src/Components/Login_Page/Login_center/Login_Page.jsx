@@ -4,12 +4,20 @@ import Login_Header from '../Login_Header';
 import Login_Footer from '../Login_Footer';
 import Login_Animation from './Login_Animation';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 function Login_Page() {
   const navigate = useNavigate();
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [accountNumber, setAccountNumber] = useState('');
+  const [mpin, setMpin] = useState('');
+  const [showMpin, setShowMpin] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [requiresOtp, setRequiresOtp] = useState(false);
+  const [loginOtpId, setLoginOtpId] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [locationCoords, setLocationCoords] = useState({ latitude: null, longitude: null });
 
   const [showAd, setShowAd] = useState(true);
   const [adFadeOut, setAdFadeOut] = useState(false);
@@ -59,6 +67,65 @@ function Login_Page() {
     }, 400);
   };
 
+  const requestDeviceLocation = () => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        setErrorMessage('Geolocation is not supported by this browser.');
+        setShowLocationModal(true);
+        resolve({ latitude: null, longitude: null });
+        return;
+      }
+
+      const success = (position) => {
+        const coords = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        };
+        console.log('Device Location:', coords);
+        setLocationCoords(coords);
+        setShowLocationModal(false);
+        setErrorMessage('');
+        resolve(coords);
+      };
+
+      const failure = (error) => {
+        console.error('Geolocation Error:', error.code, error.message);
+
+        if (error.code === 1) {
+          setErrorMessage('Location permission was denied. Please allow location access for localhost.');
+          setShowLocationModal(true);
+          resolve({ latitude: null, longitude: null });
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          success,
+          (secondError) => {
+            console.error('High Accuracy Geolocation Error:', secondError.code, secondError.message);
+            setErrorMessage('Unable to detect your device location. Please enable Windows location services and allow location access for localhost.');
+            setShowLocationModal(true);
+            resolve({ latitude: null, longitude: null });
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+          }
+        );
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        success,
+        failure,
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 60000
+        }
+      );
+    });
+  };
+
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
     const newOtp = [...otp];
@@ -76,16 +143,115 @@ function Login_Page() {
     }
   };
 
-  const handleLogin = (e) => {
-    e.preventDefault();
+  const executeLoginRequest = async (coords) => {
+    setErrorMessage('');
     setIsAuthenticating(true);
-    setTimeout(() => {
+
+    try {
+      if (!requiresOtp) {
+        const response = await fetch(`${API_URL}/api/user/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            account_number: accountNumber,
+            mpin: mpin,
+            device_id: 'WEB_CLIENT',
+            device_name: navigator.userAgent,
+            user_agent: navigator.userAgent,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            city: null,
+            country: null
+          })
+        });
+
+        const text = await response.text();
+        let data = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch {
+          throw new Error('Server returned an unreadable response.');
+        }
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || data.detail || 'Login failed. Please verify credentials.');
+        }
+
+        if (data.requires_otp || data.login_otp_id) {
+          setLoginOtpId(data.login_otp_id);
+          setRequiresOtp(true);
+          setIsAuthenticating(false);
+        } else {
+          setTimeout(() => {
+            navigate('/');
+          }, 1200);
+        }
+      } else {
+        const enteredOtp = otp.join('');
+        if (enteredOtp.length !== 6) {
+          throw new Error('Please enter all 6 digits of the OTP.');
+        }
+
+        const response = await fetch(`${API_URL}/api/user/login/verify-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            login_otp_id: loginOtpId,
+            otp: enteredOtp,
+            device_id: 'WEB_CLIENT',
+            device_name: navigator.userAgent,
+            user_agent: navigator.userAgent,
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            city: null,
+            country: null
+          })
+        });
+
+        const text = await response.text();
+        let data = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch {
+          throw new Error('Server returned an unreadable response.');
+        }
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.message || data.detail || 'OTP verification failed.');
+        }
+
+        setTimeout(() => {
+          navigate('/');
+        }, 1200);
+      }
+    } catch (err) {
       setIsAuthenticating(false);
-    }, 2800);
+      setErrorMessage(err.message || 'Authentication error occurred.');
+    }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setErrorMessage('');
+
+    let coords = locationCoords;
+    if (coords.latitude === null || coords.longitude === null) {
+      coords = await requestDeviceLocation();
+    }
+
+    if (coords.latitude === null || coords.longitude === null) {
+      setIsAuthenticating(false);
+      setErrorMessage('Location permission is required to authenticate securely.');
+      setShowLocationModal(true);
+      return;
+    }
+
+    console.log('Sending login with location:', coords);
+    await executeLoginRequest(coords);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f5f8fb] text-slate-900 select-none">
+    <div className="min-h-screen flex flex-col bg-[#f5f8fb] text-slate-900 select-none relative">
       <Login_Header />
 
       <main className="relative flex-1 flex items-center justify-center overflow-hidden">
@@ -197,26 +363,51 @@ function Login_Page() {
                       </p>
                     </div>
 
+                    {errorMessage && (
+                      <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-medium text-center">
+                        {errorMessage}
+                      </div>
+                    )}
+
                     <form onSubmit={handleLogin} className="space-y-4">
+                      <div>
+                        <label className="block mb-1.5 text-xs font-bold text-slate-700">
+                          Bank Account Number
+                        </label>
+                        <input
+                          type="text"
+                          value={accountNumber}
+                          onChange={(e) => setAccountNumber(e.target.value)}
+                          placeholder="Enter your account number"
+                          maxLength={20}
+                          disabled={requiresOtp}
+                          className="w-full h-11 px-4 rounded-xl border border-slate-300 bg-slate-50/60 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 disabled:bg-slate-100 disabled:text-slate-500"
+                          required
+                        />
+                      </div>
+
                       <div>
                         <label className="block mb-1.5 text-xs font-bold text-slate-700">
                           MPIN or Password
                         </label>
                         <div className="relative">
                           <input
-                            type={showPassword ? 'text' : 'password'}
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            type={showMpin ? 'text' : 'password'}
+                            value={mpin}
+                            onChange={(e) => setMpin(e.target.value)}
                             placeholder="Enter your MPIN or Password"
-                            className="w-full h-11 px-4 pr-11 rounded-xl border border-slate-300 bg-slate-50/60 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10"
+                            maxLength={6}
+                            disabled={requiresOtp}
+                            className="w-full h-11 px-4 pr-11 rounded-xl border border-slate-300 bg-slate-50/60 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:bg-white focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10 disabled:bg-slate-100 disabled:text-slate-500"
                             required
                           />
                           <button
                             type="button"
-                            onClick={() => setShowPassword(!showPassword)}
+                            onClick={() => setShowMpin(!showMpin)}
+                            disabled={requiresOtp}
                             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
                           >
-                            {showPassword ? (
+                            {showMpin ? (
                               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                 <circle cx="12" cy="12" r="3" />
@@ -232,31 +423,33 @@ function Login_Page() {
                         </div>
                       </div>
 
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <label className="text-xs font-bold text-slate-700">
-                            Enter OTP
-                          </label>
-                          <button type="button" className="text-xs font-bold text-teal-700 hover:text-teal-900 cursor-pointer">
-                            Resend OTP
-                          </button>
+                      {requiresOtp && (
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-xs font-bold text-slate-700">
+                              Enter OTP
+                            </label>
+                            <button type="button" className="text-xs font-bold text-teal-700 hover:text-teal-900 cursor-pointer">
+                              Resend OTP
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-6 gap-2">
+                            {otp.map((digit, index) => (
+                              <input
+                                key={index}
+                                ref={(el) => (otpInputsRef.current[index] = el)}
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={1}
+                                value={digit}
+                                onChange={(e) => handleOtpChange(index, e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(index, e)}
+                                className="h-11 w-full text-center rounded-xl border border-slate-300 bg-white text-base font-bold text-slate-900 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10"
+                              />
+                            ))}
+                          </div>
                         </div>
-                        <div className="grid grid-cols-6 gap-2">
-                          {otp.map((digit, index) => (
-                            <input
-                              key={index}
-                              ref={(el) => (otpInputsRef.current[index] = el)}
-                              type="text"
-                              inputMode="numeric"
-                              maxLength={1}
-                              value={digit}
-                              onChange={(e) => handleOtpChange(index, e.target.value)}
-                              onKeyDown={(e) => handleKeyDown(index, e)}
-                              className="h-11 w-full text-center rounded-xl border border-slate-300 bg-white text-base font-bold text-slate-900 outline-none transition focus:border-teal-600 focus:ring-4 focus:ring-teal-600/10"
-                            />
-                          ))}
-                        </div>
-                      </div>
+                      )}
 
                       <div className="flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/90 px-3.5 py-2.5">
                         <svg className="w-4 h-4 shrink-0 text-teal-700" viewBox="0 0 24 24" fill="currentColor">
@@ -271,7 +464,7 @@ function Login_Page() {
                         type="submit"
                         className="w-full h-12 rounded-xl bg-[#0b2942] hover:bg-[#071e31] text-white font-bold text-sm tracking-wide shadow-lg shadow-[#0b2942]/15 active:scale-[0.99] transition cursor-pointer flex items-center justify-center gap-2"
                       >
-                        <span>Authenticate Securely</span>
+                        <span>{requiresOtp ? 'Verify OTP & Authenticate' : 'Authenticate Securely'}</span>
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                           <path d="M5 12h14M13 6l6 6-6 6" />
                         </svg>
@@ -303,6 +496,45 @@ function Login_Page() {
       </main>
 
       <Login_Footer />
+
+      {showLocationModal && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center mb-3">
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                <circle cx="12" cy="9" r="2.5" />
+              </svg>
+            </div>
+            <h3 className="text-base font-bold text-slate-900">Enable Device Location</h3>
+            <p className="text-xs text-slate-500 mt-1 mb-5">
+              AegisLend bank security requires your device location to verify against unauthorized account intrusion.
+            </p>
+            <div className="flex gap-2.5 w-full">
+              <button
+                type="button"
+                onClick={() => setShowLocationModal(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setErrorMessage('');
+                  const coords = await requestDeviceLocation();
+                  if (coords.latitude !== null && coords.longitude !== null) {
+                    setShowLocationModal(false);
+                  }
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-[#0b2942] hover:bg-[#071e31] text-white text-xs font-bold transition"
+              >
+                Allow Location
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAd && (
         <div

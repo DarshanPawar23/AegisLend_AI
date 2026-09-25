@@ -8,7 +8,9 @@ from storage.mysql.connection import engine
 from routes.user_routes.user_registration import (
     router as user_registration_router
 )
-
+from routes.user_routes.user_login import (
+    router as user_login_router
+)
 
 app = FastAPI(
     title="AegisLend AI",
@@ -54,6 +56,9 @@ def startup():
 
 app.include_router(
     user_registration_router
+)
+app.include_router(
+    user_login_router
 )
 
 

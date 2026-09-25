@@ -1,0 +1,318 @@
+{
+  // Display name for this crew
+  "name": "Chatbot",
+
+  // Agents to include — each must have a matching agents/<name>.jsonc file
+  "agents": ["aegislend_ai_manager_and_orche", "aegislend_ai_customer_profile_", "aegislend_ai_loan_history_and_", "aegislend_ai_loan_eligibility_", "aegislend_ai_loan_product_reco", "aegislend_ai_loan_explanation_"],
+
+  // Task definitions — executed in order for sequential process
+  "tasks": [
+    {
+      // Task identifier
+      "name": "understand_the_authenticated_users_task",
+
+      // What the task should accomplish
+      // Use {placeholder} inputs here; crewai run prompts for missing values
+      "description": "Understand the authenticated user's request, identify the information and operations required to answer it, determine which specialized AegisLend agents are needed, delegate the required work to the appropriate agents, coordinate their results, and ensure that the request is fully processed before producing the final response.",
+
+      // Clear definition of what the output should look like
+      "expected_output": "A structured orchestration result containing the user's request, the required specialized agents and tasks, the relevant results returned by those agents, and a coordinated final response ready to be delivered to the authenticated customer.",
+
+      // Optional task guardrail(s) validate output before completion
+      // Use "guardrail" for one rule or "guardrails" for many
+      // Failed guardrails retry up to guardrail_max_retries times
+      // "guardrail": "Every factual claim needs context support.",
+      // "guardrails": [
+      //   "Every factual claim must be supported by context.",
+      //   "The answer must match the expected output format."
+      // ],
+      // "guardrail_max_retries": 2,
+
+      // Advanced task options:
+      // Docs: https://docs.crewai.com/concepts/tasks
+      // "type": "ConditionalTask",
+      // "condition": { "python": "my_project.conditions.should_run" },
+      // "output_json": { "python": "my_project.models.ReportOutput" },
+      // "output_pydantic": null,
+      // "response_model": null,
+      // "converter_cls": { "python": "my_project.converters.CustomConverter" },
+      // "markdown": false,
+      // "input_files": { "brief": "data/brief.txt" },
+      // "security_config": {},
+
+      // Which agent handles this task
+      "agent": "aegislend_ai_manager_and_orche"
+
+      // "tools": [],
+      // "human_input": false,
+      // "async_execution": false
+    }
+,
+    {
+      // Task identifier
+      "name": "retrieve_the_authenticated_customers_task",
+
+      // What the task should accomplish
+      // Use {placeholder} inputs here; crewai run prompts for missing values
+      "description": "Retrieve the authenticated customer's verified profile information required for the user's request, including personal details, account status, KYC status, employment information, income information, financial profile, and credit score. Use only the authenticated customer identity provided by the application and authorized customer data tools. Do not invent, modify, or infer missing customer information. Return the retrieved information in a structured format for use by the Manager Agent and other authorized agents.",
+
+      // Clear definition of what the output should look like
+      "expected_output": "A structured customer profile containing the authenticated customer's verified personal details, account status, KYC status, employment details, income details, financial profile, and credit score, including clear indication of any unavailable or missing information.",
+
+      // Optional task guardrail(s) validate output before completion
+      // Use "guardrail" for one rule or "guardrails" for many
+      // Failed guardrails retry up to guardrail_max_retries times
+      // "guardrail": "Every factual claim needs context support.",
+      // "guardrails": [
+      //   "Every factual claim must be supported by context.",
+      //   "The answer must match the expected output format."
+      // ],
+      // "guardrail_max_retries": 2,
+
+      // Advanced task options:
+      // Docs: https://docs.crewai.com/concepts/tasks
+      // "type": "ConditionalTask",
+      // "condition": { "python": "my_project.conditions.should_run" },
+      // "output_json": { "python": "my_project.models.ReportOutput" },
+      // "output_pydantic": null,
+      // "response_model": null,
+      // "converter_cls": { "python": "my_project.converters.CustomConverter" },
+      // "markdown": false,
+      // "input_files": { "brief": "data/brief.txt" },
+      // "security_config": {},
+
+      // Which agent handles this task
+      "agent": "aegislend_ai_customer_profile_",
+
+      // Task outputs used as context
+      "context": ["understand_the_authenticated_users_task"]
+
+      // "tools": [],
+      // "human_input": false,
+      // "async_execution": false
+    }
+,
+    {
+      // Task identifier
+      "name": "retrieve_the_authenticated_customers_task_2",
+
+      // What the task should accomplish
+      // Use {placeholder} inputs here; crewai run prompts for missing values
+      "description": "Retrieve the authenticated customer's current and historical loan information required for the user's request, including active loans, outstanding balances, existing EMI obligations, repayment history, days past due, late payments, defaults, and default counts. Use only authorized customer loan-data tools and the authenticated customer identity provided by the application. Do not invent, modify, or infer missing loan information. Return the loan and repayment information in a structured format for use by the Eligibility Agent and other authorized agents.",
+
+      // Clear definition of what the output should look like
+      "expected_output": "A structured loan history containing the authenticated customer's active and historical loans, outstanding balances, total existing EMI obligations, repayment history, days past due, late-payment information, default information, and default count, with clear indication of any unavailable or missing information.",
+
+      // Optional task guardrail(s) validate output before completion
+      // Use "guardrail" for one rule or "guardrails" for many
+      // Failed guardrails retry up to guardrail_max_retries times
+      // "guardrail": "Every factual claim needs context support.",
+      // "guardrails": [
+      //   "Every factual claim must be supported by context.",
+      //   "The answer must match the expected output format."
+      // ],
+      // "guardrail_max_retries": 2,
+
+      // Advanced task options:
+      // Docs: https://docs.crewai.com/concepts/tasks
+      // "type": "ConditionalTask",
+      // "condition": { "python": "my_project.conditions.should_run" },
+      // "output_json": { "python": "my_project.models.ReportOutput" },
+      // "output_pydantic": null,
+      // "response_model": null,
+      // "converter_cls": { "python": "my_project.converters.CustomConverter" },
+      // "markdown": false,
+      // "input_files": { "brief": "data/brief.txt" },
+      // "security_config": {},
+
+      // Which agent handles this task
+      "agent": "aegislend_ai_loan_history_and_",
+
+      // Task outputs used as context
+      "context": ["understand_the_authenticated_users_task", "retrieve_the_authenticated_customers_task"]
+
+      // "tools": [],
+      // "human_input": false,
+      // "async_execution": false
+    }
+,
+    {
+      // Task identifier
+      "name": "evaluate_the_authenticated_customers_task",
+
+      // What the task should accomplish
+      // Use {placeholder} inputs here; crewai run prompts for missing values
+      "description": "Evaluate the authenticated customer's eligibility for the requested loan product using the verified customer profile, financial information, credit information, existing loan obligations, repayment history, and applicable AegisLend loan policy. Determine the required underwriting inputs and invoke the deterministic underwriting engine to calculate the eligibility result, CIBIL risk tier, applicable interest rate, FOIR, available EMI capacity, maximum eligible loan amount, tenure, LTV where applicable, policy limits, and rejection reasons. Do not independently calculate, invent, or override any financial result produced by the underwriting engine.",
+
+      // Clear definition of what the output should look like
+      "expected_output": "A structured deterministic underwriting result containing eligibility status, applicable loan product, CIBIL score and risk tier, interest rate, FOIR, available EMI capacity, maximum eligible loan amount, tenure, LTV where applicable, applicable policy limits, and all reasons for approval, rejection, or restrictions.",
+
+      // Optional task guardrail(s) validate output before completion
+      // Use "guardrail" for one rule or "guardrails" for many
+      // Failed guardrails retry up to guardrail_max_retries times
+      // "guardrail": "Every factual claim needs context support.",
+      // "guardrails": [
+      //   "Every factual claim must be supported by context.",
+      //   "The answer must match the expected output format."
+      // ],
+      // "guardrail_max_retries": 2,
+
+      // Advanced task options:
+      // Docs: https://docs.crewai.com/concepts/tasks
+      // "type": "ConditionalTask",
+      // "condition": { "python": "my_project.conditions.should_run" },
+      // "output_json": { "python": "my_project.models.ReportOutput" },
+      // "output_pydantic": null,
+      // "response_model": null,
+      // "converter_cls": { "python": "my_project.converters.CustomConverter" },
+      // "markdown": false,
+      // "input_files": { "brief": "data/brief.txt" },
+      // "security_config": {},
+
+      // Which agent handles this task
+      "agent": "aegislend_ai_loan_eligibility_",
+
+      // Task outputs used as context
+      "context": ["understand_the_authenticated_users_task", "retrieve_the_authenticated_customers_task", "retrieve_the_authenticated_customers_task_2"]
+
+      // "tools": [],
+      // "human_input": false,
+      // "async_execution": false
+    }
+,
+    {
+      // Task identifier
+      "name": "determine_which_aegislend_loan_task",
+
+      // What the task should accomplish
+      // Use {placeholder} inputs here; crewai run prompts for missing values
+      "description": "Determine which AegisLend loan products are relevant and applicable to the authenticated customer based on the user's request, verified customer information, and the structured underwriting result. Compare the customer's requirements and underwriting outcome with the configured product policies and identify applicable loan products, product-specific conditions, and required documents. Do not change, recalculate, or override any financial values or eligibility decisions produced by the deterministic underwriting engine.",
+
+      // Clear definition of what the output should look like
+      "expected_output": "A structured product recommendation containing the applicable AegisLend loan products, product-specific eligibility conditions, important product terms, and required documents, together with the underwriting result relevant to each applicable product. Clearly identify products that are not applicable and the policy-based reason when available.",
+
+      // Optional task guardrail(s) validate output before completion
+      // Use "guardrail" for one rule or "guardrails" for many
+      // Failed guardrails retry up to guardrail_max_retries times
+      // "guardrail": "Every factual claim needs context support.",
+      // "guardrails": [
+      //   "Every factual claim must be supported by context.",
+      //   "The answer must match the expected output format."
+      // ],
+      // "guardrail_max_retries": 2,
+
+      // Advanced task options:
+      // Docs: https://docs.crewai.com/concepts/tasks
+      // "type": "ConditionalTask",
+      // "condition": { "python": "my_project.conditions.should_run" },
+      // "output_json": { "python": "my_project.models.ReportOutput" },
+      // "output_pydantic": null,
+      // "response_model": null,
+      // "converter_cls": { "python": "my_project.converters.CustomConverter" },
+      // "markdown": false,
+      // "input_files": { "brief": "data/brief.txt" },
+      // "security_config": {},
+
+      // Which agent handles this task
+      "agent": "aegislend_ai_loan_product_reco",
+
+      // Task outputs used as context
+      "context": ["understand_the_authenticated_users_task", "retrieve_the_authenticated_customers_task", "retrieve_the_authenticated_customers_task_2", "evaluate_the_authenticated_customers_task"]
+
+      // "tools": [],
+      // "human_input": false,
+      // "async_execution": false
+    }
+,
+    {
+      // Task identifier
+      "name": "create_the_final_response_task",
+
+      // What the task should accomplish
+      // Use {placeholder} inputs here; crewai run prompts for missing values
+      "description": "Create the final response to the authenticated customer using the verified customer information, loan history, deterministic underwriting result, product recommendations, and relevant policy or document knowledge retrieved through the AegisLend RAG system when required. Clearly explain the customer's eligibility status, applicable loan products, calculated loan amount, interest rate, EMI capacity, tenure, important conditions, reasons for approval or rejection, and required documents. Preserve all numerical values and financial decisions exactly as provided by the deterministic underwriting engine and never invent or modify customer information or policy rules.",
+
+      // Clear definition of what the output should look like
+      "expected_output": "A clear, accurate, personalized, and professional final chatbot response that directly answers the authenticated customer's question, explains the relevant underwriting result and product recommendation, provides applicable policy-based explanations and required documents when relevant, and preserves all deterministic financial values without modification.",
+
+      // Optional task guardrail(s) validate output before completion
+      // Use "guardrail" for one rule or "guardrails" for many
+      // Failed guardrails retry up to guardrail_max_retries times
+      // "guardrail": "Every factual claim needs context support.",
+      // "guardrails": [
+      //   "Every factual claim must be supported by context.",
+      //   "The answer must match the expected output format."
+      // ],
+      // "guardrail_max_retries": 2,
+
+      // Advanced task options:
+      // Docs: https://docs.crewai.com/concepts/tasks
+      // "type": "ConditionalTask",
+      // "condition": { "python": "my_project.conditions.should_run" },
+      // "output_json": { "python": "my_project.models.ReportOutput" },
+      // "output_pydantic": null,
+      // "response_model": null,
+      // "converter_cls": { "python": "my_project.converters.CustomConverter" },
+      // "markdown": false,
+      // "input_files": { "brief": "data/brief.txt" },
+      // "security_config": {},
+
+      // Which agent handles this task
+      "agent": "aegislend_ai_loan_explanation_",
+
+      // Task outputs used as context
+      "context": ["understand_the_authenticated_users_task", "retrieve_the_authenticated_customers_task", "retrieve_the_authenticated_customers_task_2", "evaluate_the_authenticated_customers_task", "determine_which_aegislend_loan_task"]
+
+      // "tools": [],
+      // "human_input": false,
+      // "async_execution": false
+    }
+
+  ],
+
+  // Execution process
+  // "sequential" — tasks run in order, each receiving prior task outputs
+  // "hierarchical" — a manager agent delegates tasks (requires manager_llm)
+  "process": "sequential",
+
+  // Enable verbose logging during execution
+  "verbose": true,
+
+  // Enable crew memory — persists context and learnings across tasks
+  "memory": true,
+
+  // Automatically plan the execution strategy before running tasks
+  // "planning": false,
+
+  // LLM for the planning step (used when planning is true)
+  // "planning_llm": "openai/gpt-4o",
+
+  // LLM for the manager agent (required when process is "hierarchical")
+  // "manager_llm": "openai/gpt-4o",
+
+  // Crew-level LLM fields also accept object form for custom endpoints
+  // "chat_llm": {"model": "llama3", "provider": "ollama", "base_url": "http://localhost:11434"},
+
+  // Advanced crew options:
+  // Docs: https://docs.crewai.com/concepts/crews
+  // For hierarchical crews, manager_agent can reference an agents/<name>.jsonc file
+  // that is not included in the "agents" list.
+  // "manager_agent": "aegislend_ai_manager_and_orche",
+  // "before_kickoff_callbacks": [{"python": "my_project.callbacks.before_kickoff"}],
+  // "after_kickoff_callbacks": [{"python": "my_project.callbacks.after_kickoff"}],
+  // "function_calling_llm": "openai/gpt-4o-mini",
+  // "max_rpm": null,
+  // "cache": true,
+  // "knowledge_sources": [],
+  // "embedder": {},
+  // "output_log_file": "crew.log",
+  // "stream": false,
+  // "tracing": false,
+  // "security_config": {},
+
+  // Optional runtime input defaults.
+  // Use {placeholder} in agent or task text, for example:
+  // "description": "Research {topic} and write a brief"
+  // `crewai run` prompts for any placeholders missing from this object.
+  "inputs": {}
+}

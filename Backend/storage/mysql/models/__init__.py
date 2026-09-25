@@ -12,3 +12,4 @@ from storage.mysql.models.customer_loan import CustomerLoan
 from storage.mysql.models.loan_payment import LoanPayment
 from storage.mysql.models.user_app_registration import UserAppRegistration
 from storage.mysql.models.registration_verification import RegistrationVerification
+from storage.mysql.models.login_otp_verification import LoginOtpVerification
